@@ -1,0 +1,38 @@
+# ar-data-platform: local stack
+# Layer 1 (phase 1, week 1): operational source database only.
+# Later weeks add: Redpanda + Debezium (week 3), MinIO + Iceberg REST catalog + Spark (week 4).
+# All images are multi-arch, so they run natively on Apple Silicon (M1/M2/M3).
+
+name: ar-data-platform
+
+services:
+  source-db:
+    image: postgres:16
+    container_name: ar-source-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+      POSTGRES_DB: ${POSTGRES_DB:-source}
+    # wal_level=logical is what Debezium needs to read changes from the WAL (week 3).
+    # Enabling it now avoids recreating the database later.
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=4
+      - -c
+      - max_wal_senders=4
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - source-db-data:/var/lib/postgresql/data
+      - ./sql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-source}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  source-db-data:

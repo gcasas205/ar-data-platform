@@ -1,0 +1,25 @@
+# Environment and secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Data: raw downloads and local lake files never go to git
+data/
+*.zip
+*.parquet
+*.csv.gz
+
+# Spark / notebooks
+spark-warehouse/
+metastore_db/
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
